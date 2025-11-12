@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.ext import Application, MessageHandler, CommandHandler, ContextTypes, filters
 
 # ======= عدّل ده بس =======
-BOT_TOKEN = "حط_هنا_توكن_البوت_التاني_بين_علامتين"  # مثال: "82685...:AAE..."
+BOT_TOKEN = "8063429512:AAHx-cLSOvW7sIGh_CJMNBSw8ZywWrIj00k"
 # ==========================
 
 # جروب المصدر (المرسِل)
