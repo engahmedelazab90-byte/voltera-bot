@@ -66,7 +66,7 @@ def build_app() -> Application:
     app.add_handler(MessageHandler((filters.ALL & ~filters.StatusUpdate.ALL), copier))
     return app
 
-if name == "__main__":
+if __name__== "__main__":
     # إصلاح الـ event loop على ويندوز
     if sys.platform.startswith("win"):
         try:
