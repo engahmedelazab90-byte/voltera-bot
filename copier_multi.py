@@ -9,6 +9,7 @@ TARGET_CHAT_IDS = [                          # ← حط هنا أكتر من ج�
     -1003172224979,
     -1002513344948,
     -1003079805290,
+    -1003177372308,
     # زوّد أو قلّل براحتك
 ]
 
@@ -89,4 +90,5 @@ if __name__ == "__main__":
         loop.run_until_complete(app.stop())
         loop.run_until_complete(app.shutdown())
         loop.close()
+
 
