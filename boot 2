@@ -1,0 +1,128 @@
+# copier_second.py — بوت النسخ التاني: ينسخ الرسائل من جروب مصدر لعدة جروبات هدف
+import sys
+import asyncio
+from telegram import Update
+from telegram.ext import Application, MessageHandler, CommandHandler, ContextTypes, filters
+
+# ============================
+# 1) توكن بوت النسخ التاني
+#    (توكن مختلف عن البوت الأول)
+# ============================
+BOT_TOKEN = "8063429512:AAHx-cLSOvW7sIGh_CJMNBSw8ZywWrIj00k"
+
+# =====================================
+# 2) جروب المصدر للبوت التاني
+#    (الجروب اللي الرسائل هتطلع منه)
+# =====================================
+SOURCE_CHAT_ID = -1002307891907  # غيّر الرقم ده لـ chat_id جروب المصدر
+
+# ================================================
+# 3) الجروبات اللي البوت التاني هيبعت لها
+#    (ممكن جروب واحد أو أكتر)
+# ================================================
+TARGET_CHAT_IDS = [
+    -1001877613633,
+    -1001831208064,
+-1003122776203,
+-1002243512135,
+-1001945968861,
+-1002381368613,
+-1002308429112,
+-1001816602568,
+-1002400046352,
+-1001518389308,
+-1002741628383,
+ -1001988599283,
+-1001605571320,
+ -1002378030426,
+
+
+    # زوّد IDs تانية هنا لو عايز
+]
+
+# ✅ ترويسة تميّز البوت التاني عن الأول (اختياري)
+SHOW_PREFIX =  False  # خليه True لو عايز الترويسة تظهر، False لو مش عايز
+PREFIX_TEXT = "【via Copier #2】"  # هتظهر فوق كل رسالة منسوخة
+
+# أمر /id للمساعدة
+async def cmd_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat = update.effective_chat
+    await update.message.reply_text(f"chat_id: {chat.id}\nchat_type: {chat.type}")
+
+async def send_to_targets(context: ContextTypes.DEFAULT_TYPE, msg):
+    """يبعت نفس الرسالة لكل الجروبات الهدف"""
+    for target in TARGET_CHAT_IDS:
+        # لو حد حط المصدر ضمن الهدف بالخطأ، نتجاهله
+        if target == SOURCE_CHAT_ID:
+            continue
+        try:
+            # نبعت الترويسة الأول لو مفعّل
+            if SHOW_PREFIX and PREFIX_TEXT:
+                await context.bot.send_message(
+                    chat_id=target,
+                    text=PREFIX_TEXT
+                )
+
+            # بعدين ننسخ الرسالة كما هي (يحافظ على الميديا والفورمات)
+            await context.bot.copy_message(
+                chat_id=target,
+                from_chat_id=SOURCE_CHAT_ID,
+                message_id=msg.message_id,
+                protect_content=False
+            )
+            print(f"[OK] (BOT2) Copied message {msg.message_id} → {target}")
+        except Exception as e:
+            print(f"[ERR] (BOT2) Copy error to {target}: {e}")
+
+async def copier(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """الهاندلر اللي بيلتقط أي رسالة في جروب المصدر وينقلها"""
+    chat = update.effective_chat
+    msg = update.effective_message
+
+    # نتأكد إن الرسالة جاية من جروب المصدر بس
+    if chat is None or chat.id != SOURCE_CHAT_ID:
+        return
+
+    # نتجاهل الأوامر (اللي بتبدأ بـ / )
+    if msg.text and msg.text.startswith("/"):
+        return
+
+    await send_to_targets(context, msg)
+
+def build_app() -> Application:
+    app = Application.builder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("id", cmd_id))
+    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, copier))
+    return app
+
+if __name__ == "__main__":
+    # إصلاح ال-event loop على ويندوز (خاصة مع Python 3.14)
+    if sys.platform.startswith("win"):
+        try:
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        except Exception:
+            pass
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    app = build_app()
+    print(f"✅ Copier #2 running… SOURCE: {SOURCE_CHAT_ID} → TARGETS: {TARGET_CHAT_IDS}")
+    print("تأكد إن البوت رقم 2 Admin في جروب المصدر وكل جروبات الهدف")
+
+    try:
+        # نجهز البوت ونلغي أي Webhook قديم
+        loop.run_until_complete(app.initialize())
+        loop.run_until_complete(app.bot.delete_webhook(drop_pending_updates=True))
+        loop.run_until_complete(app.start())
+        loop.run_until_complete(app.updater.start_polling())
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        try:
+            loop.run_until_complete(app.updater.stop())
+            loop.run_until_complete(app.stop())
+            loop.run_until_complete(app.shutdown())
+        finally:
+            loop.close()
