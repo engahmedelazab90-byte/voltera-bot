@@ -28,7 +28,7 @@ TARGET_CHAT_IDS = [
     -1001988599283,
     -1001605571320,
     -1002378030426,
-    -1003559869592,
+   
 ]
 
 async def cmd_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
